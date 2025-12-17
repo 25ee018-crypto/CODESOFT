@@ -1,0 +1,114 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+using namespace cv;
+using namespace std;
+
+void showMenu() {
+    cout << "\n--- Image Processing Tool ---\n";
+    cout << "1. Display Image\n";
+    cout << "2. Apply Grayscale Filter\n";
+    cout << "3. Apply Blur Filter\n";
+    cout << "4. Apply Sharpen Filter\n";
+    cout << "5. Adjust Brightness/Contrast\n";
+    cout << "6. Crop Image\n";
+    cout << "7. Resize Image\n";
+    cout << "8. Save Image\n";
+    cout << "9. Exit\n";
+    cout << "Enter your choice: ";
+}
+
+int main() {
+    string imagePath;
+    cout << "Enter path of image to load: ";
+    cin >> imagePath;
+
+    Mat image = imread(imagePath);
+    if (image.empty()) {
+        cout << "Error: Could not load image.\n";
+        return -1;
+    }
+
+    Mat processedImage = image.clone();
+    int choice;
+
+    do {
+        showMenu();
+        cin >> choice;
+
+        switch (choice) {
+            case 1: {
+                imshow("Image", processedImage);
+                waitKey(0);
+                destroyAllWindows();
+                break;
+            }
+            case 2: {
+                cvtColor(processedImage, processedImage, COLOR_BGR2GRAY);
+                cout << "Applied Grayscale filter.\n";
+                break;
+            }
+            case 3: {
+                blur(processedImage, processedImage, Size(5, 5));
+                cout << "Applied Blur filter.\n";
+                break;
+            }
+            case 4: {
+                Mat kernel = (Mat_<float>(3,3) <<
+                              0, -1, 0,
+                              -1, 5, -1,
+                              0, -1, 0);
+                filter2D(processedImage, processedImage, processedImage.depth(), kernel);
+                cout << "Applied Sharpen filter.\n";
+                break;
+            }
+            case 5: {
+                double alpha; // contrast
+                int beta;     // brightness
+                cout << "Enter contrast value (1.0-3.0): ";
+                cin >> alpha;
+                cout << "Enter brightness value (0-100): ";
+                cin >> beta;
+                processedImage.convertTo(processedImage, -1, alpha, beta);
+                cout << "Adjusted brightness/contrast.\n";
+                break;
+            }
+            case 6: {
+                int x, y, w, h;
+                cout << "Enter x, y, width, height for crop: ";
+                cin >> x >> y >> w >> h;
+                if (x >= 0 && y >= 0 && x + w <= processedImage.cols && y + h <= processedImage.rows) {
+                    Rect roi(x, y, w, h);
+                    processedImage = processedImage(roi);
+                    cout << "Image cropped.\n";
+                } else {
+                    cout << "Invalid crop dimensions.\n";
+                }
+                break;
+            }
+            case 7: {
+                int newWidth, newHeight;
+                cout << "Enter new width and height: ";
+                cin >> newWidth >> newHeight;
+                resize(processedImage, processedImage, Size(newWidth, newHeight));
+                cout << "Image resized.\n";
+                break;
+            }
+            case 8: {
+                string savePath;
+                cout << "Enter path to save image: ";
+                cin >> savePath;
+                imwrite(savePath, processedImage);
+                cout << "Image saved successfully.\n";
+                break;
+            }
+            case 9: {
+                cout << "Exiting program...\n";
+                break;
+            }
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 9);
+
+    return 0;
+}
